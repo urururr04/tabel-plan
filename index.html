@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>卓管理</title>
+    <link rel="stylesheet" href="./styles.css?v=20260602-002" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Night Table Control</p>
+          <h1>卓管理</h1>
+        </div>
+        <div class="header-stats" aria-label="営業状況">
+          <div>
+            <span id="activeCount">0</span>
+            <small>稼働卓</small>
+          </div>
+          <div>
+            <span id="activeCastCount">0</span>
+            <small>出勤キャスト</small>
+          </div>
+          <button id="settingsButton" class="settings-button" type="button" aria-label="設定">⚙</button>
+        </div>
+      </header>
+
+      <nav class="tabs" aria-label="画面切り替え">
+        <button class="tab-button active" data-view="mapView" type="button">
+          店内
+        </button>
+        <button class="tab-button" data-view="timelineView" type="button">
+          時系列
+        </button>
+        <button class="tab-button" data-view="inputView" type="button">
+          入力
+        </button>
+      </nav>
+
+      <main>
+        <section id="mapView" class="view active" aria-labelledby="mapTitle">
+          <div class="section-head">
+            <div>
+              <h2 id="mapTitle">店内</h2>
+              <p>現在時刻に対する各卓の残り時間と担当状況</p>
+            </div>
+            <div class="legend" aria-label="残り時間の凡例">
+              <span><i class="status-dot ok"></i>余裕</span>
+              <span><i class="status-dot warn"></i>残り少</span>
+              <span><i class="status-dot danger"></i>時間切れ</span>
+              <span><i class="status-dot empty"></i>空卓</span>
+            </div>
+          </div>
+
+          <div class="floor-wrap">
+            <div class="floor-map" id="floorMap" aria-label="店内マップ"></div>
+          </div>
+        </section>
+
+        <section id="timelineView" class="view" aria-labelledby="timelineTitle">
+          <div class="section-head">
+            <div>
+              <h2 id="timelineTitle">時系列</h2>
+              <p>縦軸が時間、横軸が卓番号の一覧</p>
+            </div>
+          </div>
+          <div class="timeline-shell">
+            <div
+              class="timeline-grid"
+              id="timelineGrid"
+              aria-label="卓別時系列表"
+            ></div>
+          </div>
+        </section>
+
+        <section id="inputView" class="view" aria-labelledby="inputTitle">
+          <div class="section-head">
+            <div>
+              <h2 id="inputTitle">入力画面</h2>
+            </div>
+          </div>
+
+          <div class="input-layout">
+            <form id="entryForm" class="panel">
+              <h3>入店</h3>
+              <div class="form-grid">
+                <label>
+                  卓番号
+                  <select id="tableSelect" required></select>
+                </label>
+                <label>
+                  人数
+                  <select id="guestCount" required>
+                    <option value="1" selected>1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                  </select>
+                </label>
+                <label>
+                  来店時間
+                  <select id="startTime" required></select>
+                </label>
+                <label class="checkbox-label">
+                  <input id="timePending" type="checkbox" />
+                  時間未定
+                </label>
+                <div id="guestFields" class="guest-fields full"></div>
+                <label class="full">
+                  メモ
+                  <textarea
+                    id="memo"
+                    rows="3"
+                    placeholder="ボトル、延長確認、要注意事項など"
+                  ></textarea>
+                </label>
+              </div>
+              <button class="primary-button" type="submit">入店</button>
+            </form>
+
+            <div class="panel quick-actions">
+              <h3>退店</h3>
+              <label>
+                対象予定
+                <select id="actionSessionSelect"></select>
+              </label>
+              <label>
+                退店時間
+                <select id="checkoutTime" required></select>
+              </label>
+              <div class="quick-grid">
+                <button id="checkoutButton" data-action="checkout" type="button" disabled>退店</button>
+              </div>
+            </div>
+          </div>
+          <div class="panel pending-panel">
+            <h3>時間未定一覧</h3>
+            <div id="pendingList" class="pending-list"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="tableDialog">
+      <div class="dialog-head">
+        <h3 id="dialogTitle">卓詳細</h3>
+        <button
+          id="closeDialog"
+          class="icon-button"
+          type="button"
+          aria-label="閉じる"
+        >
+          ×
+        </button>
+      </div>
+      <div id="dialogBody"></div>
+    </dialog>
+
+    <dialog id="settingsDialog">
+      <div class="dialog-head">
+        <h3>設定</h3>
+        <button id="closeSettings" class="icon-button" type="button" aria-label="閉じる">×</button>
+      </div>
+      <div class="settings-body">
+        <label class="toggle-row">
+          <span>
+            <strong>A,B卓の分離</strong>
+            <small>オフの場合はA1,2 / A3,4 / B1,2 / B3,4で表示</small>
+          </span>
+          <input id="splitToggle" type="checkbox" />
+        </label>
+
+        <div class="cast-settings">
+          <h4>キャスト一覧</h4>
+          <div class="cast-add-row">
+            <input id="castNameInput" type="text" placeholder="キャスト名" />
+            <button id="addCast" class="ghost-button" type="button">追加</button>
+          </div>
+          <ul id="castList" class="cast-list"></ul>
+        </div>
+        <button id="resetBusinessData" class="danger-button" type="button">初期化</button>
+      </div>
+    </dialog>
+
+    <script src="./app.js?v=20260602-002"></script>
+  </body>
+</html>
